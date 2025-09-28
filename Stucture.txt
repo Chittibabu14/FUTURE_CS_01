@@ -1,0 +1,16 @@
+
+---
+
+### `Stucture.txt`
+```txt
+# Stucture.txt
+# Purpose: describes the project/repo structure for the FUTURE_CS_01 OWASP Juice Shop project.
+
+Root: FUTURE_CS_01/
+├── Payloads/
+│   ├── SQLInjectioncommands.txt      
+│   ├── XSS list.txt                                      
+├──── Web_security_testing_report.pdf
+├── README.md                         # Project-level README and usage guide                  # Python deps (e.g., reportlab)
+└── LICENSE
+

